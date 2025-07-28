@@ -20,7 +20,7 @@ export enum EventType {
 
 @Service()
 export class KvStorageService {
-	private map: Record<string, Array<string | number>> = {};
+	private map: Record<string, Array<string | number | object | boolean>> = {};
 	private mapExpiration: Record<string, number> = {};
 
 	private workflowListenersMap: Record<number, Array<(a: IDataObject) => void>> = {};
@@ -35,6 +35,40 @@ export class KvStorageService {
 			debug('setInterval');
 			this.deleteExpiredEntries();
 		}, 1 * 1000);
+	}
+
+	private parseValueIfNeeded(value: string): string | number | object | boolean {
+		if (typeof value !== 'string') {
+			return value;
+		}
+
+		const trimmedValue = value.trim();
+		
+		// Check if it looks like JSON (starts with { or [)
+		if (trimmedValue.startsWith('{') || trimmedValue.startsWith('[')) {
+			try {
+				return JSON.parse(trimmedValue);
+			} catch (e) {
+				// If parsing fails, return as string
+				return value;
+			}
+		}
+
+		// Check if it's a number
+		if (/^-?\d+(\.\d+)?$/.test(trimmedValue)) {
+			const parsed = parseFloat(trimmedValue);
+			if (!isNaN(parsed)) {
+				return parsed;
+			}
+		}
+
+		// Check if it's a boolean
+		if (trimmedValue === 'true' || trimmedValue === 'false') {
+			return trimmedValue === 'true';
+		}
+
+		// Return as string if no parsing needed
+		return value;
 	}
 
 	private deleteExpiredEntries() {
@@ -131,7 +165,7 @@ export class KvStorageService {
 		const mapKeys = Object.keys(this.map);
 
 		let res = false;
-		let val_: Array<string | number> = [];
+		let val_: Array<string | number | object | boolean> = [];
 		const eventType = EventType.DELETED;
 		const timestamp = Date.now();
 
@@ -220,13 +254,14 @@ export class KvStorageService {
 			eventType = EventType.UPDATED;
 		}
 		const oldVal = this.map[scopedKey];
-		this.map[scopedKey] = [val];
+		const parsedValue = this.parseValueIfNeeded(val);
+		this.map[scopedKey] = val === '' || val === null || val === undefined ? [] : [parsedValue];
 		const event: IDataObject = {
 			eventType,
 			scope,
 			specifier,
 			key,
-			val,
+			val: this.map[scopedKey],
 			timestamp,
 			expiresAt,
 		};
@@ -239,6 +274,61 @@ export class KvStorageService {
 		this.sendEvent(event, scope, specifier);
 
 		return { val: this.map[scopedKey] };
+	}
+
+	insertToList(key: string, elementValue: string, insertPosition: string, insertIndex: number, scope: Scope, specifier = '', ttl = -1): IDataObject {
+		debug('insertToList: key=' + key + ';elementValue=' + elementValue + ';insertPosition=' + insertPosition + ';insertIndex=' + insertIndex + ';scope=' + scope + ';specifier=' + specifier);
+		const scopedKey = this.composeScopeKey(key, scope, specifier);
+
+		if (!Object.keys(this.map).includes(scopedKey)) {
+			return { error: 'Key does not exist. Use setValue to create it first.' };
+		}
+
+		let expiresAt = -1;
+		if (ttl > -1) {
+			expiresAt = Date.now() + ttl * 1000;
+			this.mapExpiration[scopedKey] = expiresAt;
+			debug('expiresAt=' + expiresAt);
+		}
+
+		const currentList = [...this.map[scopedKey]];
+		const oldVal = [...this.map[scopedKey]];
+		const parsedElementValue = this.parseValueIfNeeded(elementValue);
+
+		switch (insertPosition) {
+			case 'beginning':
+				currentList.unshift(parsedElementValue);
+				break;
+			case 'end':
+				currentList.push(parsedElementValue);
+				break;
+			case 'index':
+				if (insertIndex < 0 || insertIndex > currentList.length) {
+					return { error: 'Index out of bounds. Index must be between 0 and ' + currentList.length };
+				}
+				currentList.splice(insertIndex, 0, parsedElementValue);
+				break;
+			default:
+				return { error: 'Invalid insert position. Use beginning, end, or index.' };
+		}
+
+		this.map[scopedKey] = currentList;
+
+		const timestamp = Date.now();
+		const event: IDataObject = {
+			eventType: EventType.UPDATED,
+			scope,
+			specifier,
+			key,
+			val: currentList,
+			oldVal,
+			timestamp,
+			expiresAt,
+		};
+
+		this.sendEvent(event, scope, specifier);
+
+		return { val: this.map[scopedKey], inserted: parsedElementValue, position: insertPosition, index: insertPosition === 'index' ? insertIndex : undefined };
 	}
 
 	private sendEvent(event: IDataObject, scope: Scope, specifier: string) {
