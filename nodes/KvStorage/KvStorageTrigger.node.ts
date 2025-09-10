@@ -13,7 +13,7 @@ const debug = require('debug')('kv-storage');
 export class KvStorageTrigger implements INodeType {
 	description: INodeTypeDescription = {
 		// Basic node details will go here
-		displayName: 'Key-Value Storage Trigger',
+		displayName: 'Key-Value Storage (diginno.net) Trigger',
 		name: 'kvStorageTrigger',
 		icon: 'file:KvStorage.svg',
 		group: ['trigger'],

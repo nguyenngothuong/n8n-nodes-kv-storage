@@ -8,7 +8,7 @@ import { KvStorageService, Scope } from './KvStorageService';
 export class KvStorage implements INodeType {
 	description: INodeTypeDescription = {
 		// Basic node details will go here
-		displayName: 'Key-Value Storage',
+		displayName: 'Key-Value Storage (diginno.net)',
 		name: 'kvStorage',
 		icon: 'file:KvStorage.svg',
 		group: ['storage'],
