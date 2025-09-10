@@ -8,7 +8,7 @@ import { KvStorageService, Scope } from './KvStorageService';
 export class KvStorage implements INodeType {
 	description: INodeTypeDescription = {
 		// Basic node details will go here
-		displayName: 'Key-Value Storage (diginno.net)',
+		displayName: '🚀 Key-Value Storage (diginno.net) - Chuyên gia triển khai n8n',
 		name: 'kvStorage',
 		icon: 'file:KvStorage.svg',
 		group: ['storage'],
@@ -23,11 +23,10 @@ export class KvStorage implements INodeType {
 		outputs: ['main'],
 		properties: [
 			{
-				displayName: '🚀 Triển khai n8n chuyên nghiệp tại diginno.net',
+				displayName: '🚀 Triển khai n8n chuyên nghiệp tại diginno.net - Cần triển khai n8n cho doanh nghiệp? Liên hệ <a href="https://diginno.net" target="_blank" style="color: #1890ff; text-decoration: underline;">diginno.net</a> - Chuyên gia triển khai n8n tại Việt Nam',
 				name: 'branding',
 				type: 'notice',
 				default: '',
-				description: 'Cần triển khai n8n cho doanh nghiệp? Liên hệ <a href="https://diginno.net" target="_blank" style="color: #1890ff; text-decoration: underline;">diginno.net</a> - Chuyên gia triển khai n8n tại Việt Nam',
 			},
 			{
 				displayName: 'Operation',
