@@ -108,7 +108,11 @@ Gửi events `added` hoặc `updated` có thể được lắng nghe bằng `KV 
 
 #### insertToList
 
-Chèn một phần tử vào biến có giá trị danh sách. Key phải đã tồn tại (được tạo bằng setValue).
+Chèn một phần tử vào biến có giá trị danh sách. 
+
+**🔧 Tự động tạo key**: 
+- Với **EXECUTION scope**: Tự động tạo key mới nếu chưa tồn tại
+- Với **WORKFLOW/INSTANCE scope**: Cần tạo key trước bằng setValue
 
 **🎯 Chuyển đổi kiểu dữ liệu thông minh**: Tự động nhận dạng và chuyển đổi:
 - JSON objects: `{"name": "John"}` → `{name: "John"}`
@@ -190,15 +194,27 @@ Nếu bạn chọn Workspace scope, bạn phải cung cấp workflowId (hoặc d
 ```
 
 ### Xây dựng danh sách động
+
+**Với EXECUTION scope (tự động tạo key):**
 ```javascript
-// 1. Khởi tạo danh sách rỗng
-setValue: key="users", value="" → []
+// Không cần setValue, insertToList sẽ tự động tạo key
+insertToList: scope="EXECUTION", key="temp_list", value='{"id": 1, "name": "Alice"}' 
+// Kết quả: [{ id: 1, name: "Alice" }] (key được tạo tự động)
+
+insertToList: scope="EXECUTION", key="temp_list", value='{"id": 2, "name": "Bob"}' 
+// Kết quả: [{ id: 1, name: "Alice" }, { id: 2, name: "Bob" }]
+```
+
+**Với WORKFLOW/INSTANCE scope:**
+```javascript
+// 1. Bắt buộc khởi tạo danh sách rỗng trước
+setValue: scope="WORKFLOW", key="users", value="" → []
 
 // 2. Thêm objects vào danh sách
-insertToList: key="users", value='{"id": 1, "name": "Alice"}' 
+insertToList: scope="WORKFLOW", key="users", value='{"id": 1, "name": "Alice"}' 
 // Kết quả: [{ id: 1, name: "Alice" }]
 
-insertToList: key="users", value='{"id": 2, "name": "Bob"}' 
+insertToList: scope="WORKFLOW", key="users", value='{"id": 2, "name": "Bob"}' 
 // Kết quả: [{ id: 1, name: "Alice" }, { id: 2, name: "Bob" }]
 
 // 3. Xóa phần tử khỏi danh sách

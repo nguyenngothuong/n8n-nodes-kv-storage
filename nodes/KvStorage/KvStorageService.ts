@@ -281,7 +281,13 @@ export class KvStorageService {
 		const scopedKey = this.composeScopeKey(key, scope, specifier);
 
 		if (!Object.keys(this.map).includes(scopedKey)) {
-			return { error: 'Key does not exist. Use setValue to create it first.' };
+			// Auto-create key only for EXECUTION scope
+			if (scope === Scope.EXECUTION) {
+				debug('Auto-creating key for EXECUTION scope: ' + key);
+				this.map[scopedKey] = [];
+			} else {
+				return { error: 'Key does not exist. Use setValue to create it first. (Auto-create only works with EXECUTION scope)' };
+			}
 		}
 
 		let expiresAt = -1;
