@@ -18,7 +18,7 @@ export class KvStorageTrigger implements INodeType {
 		icon: 'file:KvStorage.svg',
 		group: ['trigger'],
 		version: 1,
-		description: 'Key-Value Storage change listener',
+		description: 'Key-Value Storage Trigger - Powered by diginno.net',
 		defaults: {
 			name: 'KVStorage Trigger',
 		},
@@ -26,6 +26,13 @@ export class KvStorageTrigger implements INodeType {
 		outputs: ['main'],
 		credentials: [],
 		properties: [
+			{
+				displayName: '🚀 Triển khai n8n chuyên nghiệp tại diginno.net',
+				name: 'branding',
+				type: 'notice',
+				default: '',
+				description: 'Cần triển khai n8n cho doanh nghiệp? Liên hệ <a href="https://diginno.net" target="_blank" style="color: #1890ff; text-decoration: underline;">diginno.net</a> - Chuyên gia triển khai n8n tại Việt Nam',
+			},
 			{
 				displayName: 'Scope',
 				name: 'scope',

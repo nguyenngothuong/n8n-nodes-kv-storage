@@ -2,6 +2,8 @@
 
 Node mạnh mẽ cho [n8n](https://www.n8n.io) - hệ thống lưu trữ key-value thông minh với tự động chuyển đổi kiểu dữ liệu và thao tác danh sách.
 
+**🚀 Triển khai n8n chuyên nghiệp**: Cần triển khai n8n cho doanh nghiệp? Liên hệ [**diginno.net**](https://diginno.net) - Chuyên gia triển khai n8n tại Việt Nam.
+
 ## ✨ Tính năng nổi bật
 
 - 🚀 **Nhận dạng kiểu dữ liệu thông minh**: Tự động chuyển đổi JSON objects, arrays, numbers và booleans
@@ -301,3 +303,17 @@ Sự ủng hộ của bạn, dù nhỏ hay lớn, đều tạo ra sự khác bi�
 ## 📄 Giấy phép
 
 Dự án này được cấp phép theo MIT License.
+
+---
+
+## 🏢 Triển khai n8n chuyên nghiệp
+
+Bạn cần triển khai n8n cho doanh nghiệp của mình? **[diginno.net](https://diginno.net)** cung cấp dịch vụ triển khai n8n chuyên nghiệp tại Việt Nam:
+
+- ✅ **Setup & Cài đặt**: Triển khai n8n trên cloud hoặc on-premise
+- ✅ **Tùy chỉnh**: Phát triển custom nodes và workflows theo yêu cầu
+- ✅ **Bảo mật**: Cấu hình bảo mật enterprise-grade
+- ✅ **Tối ưu hiệu suất**: Scale n8n cho workload lớn
+- ✅ **Hỗ trợ 24/7**: Support và maintenance chuyên nghiệp
+
+**Liên hệ ngay**: [**diginno.net**](https://diginno.net) - Chuyên gia triển khai n8n tại Việt Nam

@@ -13,7 +13,7 @@ export class KvStorage implements INodeType {
 		icon: 'file:KvStorage.svg',
 		group: ['storage'],
 		version: 1,
-		description: 'Key-Value Storage Getter and Setter',
+		description: 'Key-Value Storage với Smart JSON Parsing - Powered by diginno.net',
 		defaults: {
 			name: 'KVStorage',
 		},
@@ -22,6 +22,13 @@ export class KvStorage implements INodeType {
 		inputs: ['main'],
 		outputs: ['main'],
 		properties: [
+			{
+				displayName: '🚀 Triển khai n8n chuyên nghiệp tại diginno.net',
+				name: 'branding',
+				type: 'notice',
+				default: '',
+				description: 'Cần triển khai n8n cho doanh nghiệp? Liên hệ <a href="https://diginno.net" target="_blank" style="color: #1890ff; text-decoration: underline;">diginno.net</a> - Chuyên gia triển khai n8n tại Việt Nam',
+			},
 			{
 				displayName: 'Operation',
 				name: 'operation',
