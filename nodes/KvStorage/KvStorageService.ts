@@ -331,6 +331,137 @@ export class KvStorageService {
 		return { val: this.map[scopedKey], inserted: parsedElementValue, position: insertPosition, index: insertPosition === 'index' ? insertIndex : undefined };
 	}
 
+	removeFromListByPosition(key: string, removePosition: string, removeIndex: number, scope: Scope, specifier = '', ttl = -1): IDataObject {
+		debug('removeFromListByPosition: key=' + key + ';removePosition=' + removePosition + ';removeIndex=' + removeIndex + ';scope=' + scope + ';specifier=' + specifier);
+		const scopedKey = this.composeScopeKey(key, scope, specifier);
+
+		if (!Object.keys(this.map).includes(scopedKey)) {
+			return { error: 'Key does not exist.' };
+		}
+
+		if (!Array.isArray(this.map[scopedKey]) || this.map[scopedKey].length === 0) {
+			return { error: 'List is empty.' };
+		}
+
+		let expiresAt = -1;
+		if (ttl > -1) {
+			expiresAt = Date.now() + ttl * 1000;
+			this.mapExpiration[scopedKey] = expiresAt;
+			debug('expiresAt=' + expiresAt);
+		}
+
+		const currentList = [...this.map[scopedKey]];
+		const oldVal = [...this.map[scopedKey]];
+		let removedElement: string | number | object | boolean | undefined;
+
+		switch (removePosition) {
+			case 'beginning':
+				removedElement = currentList.shift();
+				break;
+			case 'end':
+				removedElement = currentList.pop();
+				break;
+			case 'index':
+				if (removeIndex < 0 || removeIndex >= currentList.length) {
+					return { error: 'Index out of bounds. Index must be between 0 and ' + (currentList.length - 1) };
+				}
+				removedElement = currentList.splice(removeIndex, 1)[0];
+				break;
+			default:
+				return { error: 'Invalid remove position. Use beginning, end, or index.' };
+		}
+
+		this.map[scopedKey] = currentList;
+
+		const timestamp = Date.now();
+		const event: IDataObject = {
+			eventType: EventType.UPDATED,
+			scope,
+			specifier,
+			key,
+			val: currentList,
+			oldVal,
+			timestamp,
+			expiresAt,
+		};
+
+		this.sendEvent(event, scope, specifier);
+
+		return { val: this.map[scopedKey], removed: removedElement, position: removePosition, index: removePosition === 'index' ? removeIndex : undefined };
+	}
+
+	removeFromListByValue(key: string, removeValue: string, removeAll: boolean, scope: Scope, specifier = '', ttl = -1): IDataObject {
+		debug('removeFromListByValue: key=' + key + ';removeValue=' + removeValue + ';removeAll=' + removeAll + ';scope=' + scope + ';specifier=' + specifier);
+		const scopedKey = this.composeScopeKey(key, scope, specifier);
+
+		if (!Object.keys(this.map).includes(scopedKey)) {
+			return { error: 'Key does not exist.' };
+		}
+
+		if (!Array.isArray(this.map[scopedKey]) || this.map[scopedKey].length === 0) {
+			return { error: 'List is empty.' };
+		}
+
+		let expiresAt = -1;
+		if (ttl > -1) {
+			expiresAt = Date.now() + ttl * 1000;
+			this.mapExpiration[scopedKey] = expiresAt;
+			debug('expiresAt=' + expiresAt);
+		}
+
+		const currentList = [...this.map[scopedKey]];
+		const oldVal = [...this.map[scopedKey]];
+		const parsedRemoveValue = this.parseValueIfNeeded(removeValue);
+		const removedElements: Array<string | number | object | boolean> = [];
+
+		// Convert to JSON strings for deep comparison
+		const targetValueStr = JSON.stringify(parsedRemoveValue);
+		
+		if (removeAll) {
+			// Remove all matching values
+			this.map[scopedKey] = currentList.filter(item => {
+				const itemStr = JSON.stringify(item);
+				if (itemStr === targetValueStr) {
+					removedElements.push(item);
+					return false;
+				}
+				return true;
+			});
+		} else {
+			// Remove only the first matching value
+			const index = currentList.findIndex(item => JSON.stringify(item) === targetValueStr);
+			if (index !== -1) {
+				removedElements.push(currentList[index]);
+				currentList.splice(index, 1);
+				this.map[scopedKey] = currentList;
+			}
+		}
+
+		if (removedElements.length === 0) {
+			return { error: 'Value not found in list.' };
+		}
+
+		const timestamp = Date.now();
+		const event: IDataObject = {
+			eventType: EventType.UPDATED,
+			scope,
+			specifier,
+			key,
+			val: this.map[scopedKey],
+			oldVal,
+			timestamp,
+			expiresAt,
+		};
+
+		this.sendEvent(event, scope, specifier);
+
+		return { 
+			val: this.map[scopedKey], 
+			removed: removeAll ? removedElements : removedElements[0], 
+			removedCount: removedElements.length,
+		};
+	}
+
 	private sendEvent(event: IDataObject, scope: Scope, specifier: string) {
 		if (this.allListeners.length > 0) {
 			this.allListeners.map((callback) => callback(event));

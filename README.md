@@ -89,6 +89,12 @@ Gửi events `added` hoặc `updated` có thể được lắng nghe bằng `KV 
 
 Trả về giá trị dựa trên Scope, Scope specifier và key.
 
+#### deleteValue
+
+Xóa hoàn toàn key và value khỏi storage dựa trên Scope và specifier.
+
+Gửi event `deleted` có thể được lắng nghe bằng `KV Storage Trigger` node.
+
 #### incrementValue
 
 Tăng giá trị dựa trên key, Scope (Execution/Workflow/Instance) và specifier/ID của Scope.
@@ -118,6 +124,28 @@ Chèn một phần tử vào biến có giá trị danh sách. Key phải đã t
 Tham số `Expires` / `TTL` có thể được sử dụng nếu các giá trị cần được tự động xóa sau một thời gian.
 
 Gửi events `updated` có thể được lắng nghe bằng `KV Storage Trigger` node.
+
+#### removeFromList
+
+Xóa phần tử khỏi danh sách hiện có. Hỗ trợ hai phương thức xóa:
+
+**Xóa theo vị trí:**
+- **From Beginning**: Xóa phần tử đầu danh sách
+- **From End**: Xóa phần tử cuối danh sách
+- **At Index**: Xóa phần tử tại vị trí cụ thể (chỉ số bắt đầu từ 0)
+
+**Xóa theo giá trị:**
+- **First Match**: Xóa phần tử đầu tiên khớp với giá trị
+- **All Matches**: Xóa tất cả phần tử khớp với giá trị
+
+**🎯 Chuyển đổi kiểu dữ liệu thông minh**: Giá trị cần xóa cũng hỗ trợ tự động chuyển đổi:
+- JSON objects: `{"id": 1}` → So sánh chính xác với object trong danh sách
+- Numbers: `"123"` → `123`
+- Booleans: `"true"` → `true`
+
+Tham số `Expires` / `TTL` có thể được sử dụng để cập nhật thời gian hết hạn của key.
+
+Gửi event `updated` có thể được lắng nghe bằng `KV Storage Trigger` node.
 
 ### Thao tác truy vấn
 
@@ -172,6 +200,42 @@ insertToList: key="users", value='{"id": 1, "name": "Alice"}'
 
 insertToList: key="users", value='{"id": 2, "name": "Bob"}' 
 // Kết quả: [{ id: 1, name: "Alice" }, { id: 2, name: "Bob" }]
+
+// 3. Xóa phần tử khỏi danh sách
+removeFromList: key="users", method="position", position="beginning"
+// Kết quả: [{ id: 2, name: "Bob" }]
+
+// 4. Xóa theo giá trị
+removeFromList: key="users", method="value", value='{"id": 2, "name": "Bob"}'
+// Kết quả: []
+```
+
+### Quản lý hàng đợi (Queue)
+```javascript
+// FIFO Queue - First In First Out
+setValue: key="queue", value="" → []
+
+// Thêm vào cuối hàng đợi
+insertToList: key="queue", position="end", value="task1"
+insertToList: key="queue", position="end", value="task2"
+insertToList: key="queue", position="end", value="task3"
+// Kết quả: ["task1", "task2", "task3"]
+
+// Lấy từ đầu hàng đợi
+removeFromList: key="queue", method="position", position="beginning"
+// Removed: "task1", Còn lại: ["task2", "task3"]
+```
+
+### Xóa và dọn dẹp dữ liệu
+```javascript
+// Xóa key hoàn toàn
+deleteValue: key="temp_data", scope="EXECUTION"
+// Key và value bị xóa hoàn toàn khỏi storage
+
+// Xóa nhiều giá trị trùng lặp trong danh sách
+setValue: key="items", value='[1, 2, 3, 2, 4, 2]'
+removeFromList: key="items", method="value", value="2", removeAll=true
+// Kết quả: [1, 3, 4] (xóa tất cả số 2)
 ```
 
 ### Chia sẻ dữ liệu giữa các Workflow

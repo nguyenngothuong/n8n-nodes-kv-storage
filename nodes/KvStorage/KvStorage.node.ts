@@ -28,6 +28,11 @@ export class KvStorage implements INodeType {
 				type: 'options',
 				options: [
 					{
+						name: 'Delete Value by Key',
+						value: 'deleteValue',
+						action: 'Delete value by key in scope',
+					},
+					{
 						name: 'Get Value by Key in Scope',
 						value: 'getValue',
 						action: 'Get value by key in scope',
@@ -58,6 +63,11 @@ export class KvStorage implements INodeType {
 						action: 'List all values and keys in scope',
 					},
 					{
+						name: 'Remove Element From List',
+						value: 'removeFromList',
+						action: 'Remove element from existing list variable',
+					},
+					{
 						name: 'Set Value for Key in Scope',
 						value: 'setValue',
 						action: 'Set value for key in scope',
@@ -79,8 +89,10 @@ export class KvStorage implements INodeType {
 							'listAllScopeKeys',
 							'getValue',
 							'setValue',
+							'deleteValue',
 							'incrementValue',
 							'insertToList',
+							'removeFromList',
 						],
 					},
 				},
@@ -112,7 +124,7 @@ export class KvStorage implements INodeType {
 				required: true,
 				displayOptions: {
 					show: {
-						operation: ['getValue', 'setValue', 'incrementValue', 'insertToList'],
+						operation: ['getValue', 'setValue', 'deleteValue', 'incrementValue', 'insertToList', 'removeFromList'],
 					},
 				},
 				default: '',
@@ -193,13 +205,112 @@ export class KvStorage implements INodeType {
 			},
 
 			{
+				displayName: 'Remove Method',
+				name: 'removeMethod',
+				type: 'options',
+				displayOptions: {
+					show: {
+						operation: ['removeFromList'],
+					},
+				},
+				options: [
+					{
+						name: 'By Position',
+						value: 'position',
+						description: 'Remove element at specific position',
+					},
+					{
+						name: 'By Value',
+						value: 'value',
+						description: 'Remove element matching specific value',
+					},
+				],
+				default: 'position',
+			},
+
+			{
+				displayName: 'Remove Position',
+				name: 'removePosition',
+				type: 'options',
+				displayOptions: {
+					show: {
+						operation: ['removeFromList'],
+						removeMethod: ['position'],
+					},
+				},
+				options: [
+					{
+						name: 'From Beginning',
+						value: 'beginning',
+					},
+					{
+						name: 'From End',
+						value: 'end',
+					},
+					{
+						name: 'At Index',
+						value: 'index',
+					},
+				],
+				default: 'end',
+				description: 'Position to remove element from',
+			},
+
+			{
+				displayName: 'Remove Index',
+				name: 'removeIndex',
+				type: 'number',
+				typeOptions: {
+					minValue: 0,
+				},
+				displayOptions: {
+					show: {
+						operation: ['removeFromList'],
+						removeMethod: ['position'],
+						removePosition: ['index'],
+					},
+				},
+				default: 0,
+				description: 'Index position to remove from (0-based)',
+			},
+
+			{
+				displayName: 'Value to Remove',
+				name: 'removeValue',
+				type: 'string',
+				displayOptions: {
+					show: {
+						operation: ['removeFromList'],
+						removeMethod: ['value'],
+					},
+				},
+				default: '',
+				placeholder: 'Value to remove',
+				description: 'Value to search and remove. Supports JSON objects, arrays, numbers, booleans, and strings.',
+			},
+
+			{
+				displayName: 'Remove All Matches',
+				name: 'removeAll',
+				type: 'boolean',
+				displayOptions: {
+					show: {
+						operation: ['removeFromList'],
+						removeMethod: ['value'],
+					},
+				},
+				default: false,
+				description: 'Whether to remove all matching values or just the first one',
+			},
+
+			{
 				displayName: 'ExecutionId',
 				name: 'executionId',
 				type: 'string',
 				required: true,
 				displayOptions: {
 					show: {
-						operation: ['listAllKeyValues', 'listAllScopeKeys', 'getValue', 'setValue', 'insertToList'],
+						operation: ['listAllKeyValues', 'listAllScopeKeys', 'getValue', 'setValue', 'deleteValue', 'insertToList', 'removeFromList'],
 						scope: [Scope.EXECUTION],
 					},
 				},
@@ -213,7 +324,7 @@ export class KvStorage implements INodeType {
 				type: 'boolean',
 				displayOptions: {
 					show: {
-						operation: ['setValue', 'incrementValue', 'insertToList'],
+						operation: ['setValue', 'incrementValue', 'insertToList', 'removeFromList'],
 					},
 				},
 				default: true,
@@ -305,6 +416,27 @@ export class KvStorage implements INodeType {
 
 			const result = service.insertToList(key, elementValue, insertPosition, insertIndex, scope, specifier, ttl);
 			returnData.push(result);
+		} else if (operation === 'deleteValue') {
+			const key = this.getNodeParameter('key', 0) as string;
+
+			const result = service.deleteKey(key, scope, specifier);
+			returnData.push(result);
+		} else if (operation === 'removeFromList') {
+			const key = this.getNodeParameter('key', 0) as string;
+			const removeMethod = this.getNodeParameter('removeMethod', 0) as string;
+			const ttl = this.getNodeParameter('ttl', 0, -1) as number;
+
+			if (removeMethod === 'position') {
+				const removePosition = this.getNodeParameter('removePosition', 0) as string;
+				const removeIndex = this.getNodeParameter('removeIndex', 0, 0) as number;
+				const result = service.removeFromListByPosition(key, removePosition, removeIndex, scope, specifier, ttl);
+				returnData.push(result);
+			} else {
+				const removeValue = this.getNodeParameter('removeValue', 0) as string;
+				const removeAll = this.getNodeParameter('removeAll', 0, false) as boolean;
+				const result = service.removeFromListByValue(key, removeValue, removeAll, scope, specifier, ttl);
+				returnData.push(result);
+			}
 		}
 
 		return [this.helpers.returnJsonArray(returnData)];
