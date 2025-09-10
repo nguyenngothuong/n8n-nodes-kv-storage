@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-kv-storage",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Key-Value Storage Node for n8n supporting different scopes with list operations",
   "keywords": [
     "key-value",
@@ -33,7 +33,8 @@
     "prepublishOnly": "pnpm run build && pnpm run lint -c .eslintrc.prepublish.js nodes"
   },
   "files": [
-    "dist"
+    "dist",
+    "README.md"
   ],
   "n8n": {
     "n8nNodesApiVersion": 1,
